@@ -1,0 +1,56 @@
+// 此函数为中断处理函数，CLK占用一个中断，当检测到时钟有上升沿时发送一位数据
+unsigned short serialNum = 8;  
+unsigned char Send_Data[]={0x56,0x55,0x12,0x98,0x23,0x39,0x34,0x78,0x32,0x11,0x59,0x78,0x87,0x25,0x46};
+
+int Flag_len=1;
+int SendNum=0;
+int flag_CS=0;
+void CLK_ISR(MMP_GPIO_PIN piopin)
+{
+unsigned char  SPI_MOSI;
+unsigned short length=0x0;//char length;
+unsigned short Data=0;
+unsigned short Data33=0;
+ if(flag_CS){   // 当拉低片选时开始传输
+length=sizeof(Send_Data)/sizeof(char);
+   if(Flag_len){
+	//length=sizeof(Send_Data)/sizeof(char);
+	--serialNum;
+	
+	SPI_MOSI = (length>>serialNum)&0x01; 
+	MMPF_PIO_SetData(MMP_GPIO60, SPI_MOSI,MMP_TRUE);
+	if(serialNum<=0){
+		serialNum=8;
+		//Senddata(length);
+		Flag_len=0;
+	}
+   }
+   else
+
+   	{
+ 
+	
+	if(SendNum<length){
+		
+		Data=Send_Data[SendNum];
+		--serialNum;
+		
+		SPI_MOSI = (Data>>serialNum)&0x01; 
+		MMPF_PIO_SetData(MMP_GPIO60, SPI_MOSI,MMP_TRUE);
+
+		if(serialNum<=0){
+			serialNum=8;
+		
+			++SendNum;
+			if(SendNum==length)
+				{
+				Flag_len=1;
+				SendNum=0;
+				flag_CS=0;
+			}
+		}
+   }
+  
+}
+}
+}
